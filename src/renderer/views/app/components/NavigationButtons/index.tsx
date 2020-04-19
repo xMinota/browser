@@ -12,6 +12,7 @@ import { ipcRenderer, remote, MenuItem } from 'electron';
 import { HistoryItem } from '../../models/history-item';
 import { NEWTAB_URL } from '../../constants';
 
+const refreshRef = React.createRef<ToolbarButton>();
 
 const onBackClick = () => {
   store.tabs.selectedTab.callViewMethod('webContents.goBack');
@@ -25,6 +26,11 @@ const onRefreshClick = () => {
   if (store.tabs.selectedTab && store.tabs.selectedTab.loading) {
     store.tabs.selectedTab.callViewMethod('webContents.stop');
   } else {
+    store.tabs.selectedTab.refreshAnimationStarted = true;
+    setTimeout(() => {
+      store.tabs.selectedTab.refreshAnimationStarted = false;
+    }, 400);
+
     store.tabs.selectedTab.callViewMethod('webContents.reload');
   }
 };
@@ -87,11 +93,15 @@ export const NavigationButtons = observer(() => {
         title={store.locale.lang.window[0].navigate_refresh}
         icon={
           store.tabs.selectedTab && store.tabs.selectedTab.loading
-            ? icons.close
+            ? store.tabs.selectedTab.refreshAnimationStarted == false 
+              ? icons.close
+              : icons.refresh
             : icons.refresh
         }
         onContextMenu={refreshContextMenu}
         onClick={onRefreshClick}
+        ref={refreshRef}
+        isRefresh={store.tabs.selectedTab && store.tabs.selectedTab.refreshAnimationStarted}
         style={{ height: '42px' }}
       />
       <ToolbarButton
@@ -101,6 +111,7 @@ export const NavigationButtons = observer(() => {
         icon={icons.home}
         onClick={onHomeClick}
         style={{ height: '42px' }}
+        visible={!store.preferences.conf.appearance.showHomeButton}
       />
     </StyledContainer>
   );
