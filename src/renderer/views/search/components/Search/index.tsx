@@ -13,9 +13,6 @@ import { ipcRenderer } from 'electron';
 import { Suggestions } from '../Suggestions';
 import { observer } from 'mobx-react';
 import { icons } from '~/renderer/views/app/constants';
-import { Spotlight } from '../Spotlight';
-
-const urlRegex = /([--:\w?@%&+~#=]*\.[a-z]{2,4}\/{0,2})((?:[?&](?:\w+)=(?:\w+))+|[--:\w?@%&+~#=]+)?/
 
 const onKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
   if (e.which === 13) {
@@ -25,17 +22,15 @@ const onKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const text = e.currentTarget.value;
     let url = text;
 
-    if(!urlRegex.test(url)) {
-      url = `https://duckduckgo.com/${text}`
-    } else if(url.indexOf("://") === -1) {
-      url = `http://${text}`
-    }
+    let suggestion = store.suggestions.selectedSuggestion
 
-    if(text.startsWith("dot://")) {
-      url = text;
+    if(suggestion) {
+      if (suggestion.isSearch) {
+        url = `https://duckduckgo.com/${url}`;
+      } else if (url.indexOf('://') === -1) {
+        url = `http://${url}`;
+      }
     }
-
-    console.log(url, url.startsWith("dot://"))
 
     callViewMethod(
       store.tabId,

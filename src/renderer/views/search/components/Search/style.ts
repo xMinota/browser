@@ -49,14 +49,9 @@ export const SearchIcon = styled.div`
 
   ${({ isFocused, theme, icon }: { isFocused: any; theme: ITheme; icon: any }) => css`
     background-image: url(${icon});
-    background-size: ${
-      isFocused 
-        ? icon == store.details.favicon 
-          ? "18px" 
-          : "20px"
-        : "18px"};
+    background-size: 18px;
 
-    filter: ${isFocused ? theme['omnibox-search-icons'] : ""};
+    filter: ${icon == GOOGLE_ICON || icon == store.details.favicon ? 'none' : theme['omnibox-search-icons']};
   `}
 `;
 

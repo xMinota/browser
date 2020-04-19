@@ -17,7 +17,7 @@ export class SuggestionsStore {
 
     @computed
     public get selectedSuggestion() {
-      return this.list.find(x => x._id === this.selected);
+      return this.list.find(x => x.id === this.selected);
     }
 
     public load(input: HTMLInputElement): Promise<string> {

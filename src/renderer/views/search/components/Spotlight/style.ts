@@ -6,10 +6,6 @@ export const StyledSpotlight = styled.div`
     margin: 0 auto;
     padding-top: 18px;
     height: calc(100px - 54px);
-
-    ${({ theme }: { theme: ITheme }) => css`
-        background-color: ${theme['omnibox-background-color']}
-    `}
 `;
 
 export const StyledBubbleContainer = styled.div`
@@ -17,7 +13,7 @@ export const StyledBubbleContainer = styled.div`
     padding-bottom: 20px;
 `;
 
-export const Bubble = styled.div`
+export const Bubble = styled.a`
     width: 57px;
     height: 57px;
     border-radius: 50%;
@@ -25,15 +21,16 @@ export const Bubble = styled.div`
     background-repeat: no-repeat;
     margin-right: 25px;
     background-size: 24px;
-    background-color: #f0f0f0;
     transition: 0.1s background-color;
-
-    &:hover {
-        background-color: #e4e4e4;
-    }
 
     ${({ theme, icon, hasBadge, badgeNumber }: { theme: ITheme; icon: any; hasBadge?: boolean; badgeNumber?: number }) => css`
         background-image: url(${icon});
+        background-color: ${theme['omnibox-bubble']};
+        filter: ${theme['general-element']};
+
+        &:hover {
+            background-color: ${theme['omnibox-bubble-hover']}
+        }
 
         ${hasBadge ? `
             &:after {

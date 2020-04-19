@@ -27,7 +27,7 @@ class Store {
 
             this.tabId = this.details.tabId;
 
-            if(this.details.url.startsWith('dot://newtab')) {
+            if(this.details.url.startsWith('dot://newtab') || this.details.url.startsWith('http://localhost:4445/newtab')) {
                 this.details.url = '';
             }
 
@@ -46,7 +46,9 @@ class Store {
         })
 
         window.addEventListener('blur', () => {
-            this.hide()
+            if(this.visible) {
+                this.hide()
+            }
         })
     }
 
