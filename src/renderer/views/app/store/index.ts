@@ -20,6 +20,10 @@ import { UserStore } from './user';
 import { OptionsStore } from './settings';
 import { getTheme } from '~/shared/utils/themes';
 import { PreferencesStore } from './preferences';
+import { NEWTAB_URL } from '../constants';
+import FormattedURL from '@dothq/url'
+import { isURL } from '~/shared/utils/url';
+import { IParts } from '~/interfaces/parts';
 
 export class Store {
   public history = new HistoryStore();
@@ -55,7 +59,15 @@ export class Store {
   public quickMenuVisible: boolean = false;
 
   @observable
-  public menuBounds: {} = {};
+  public dialogsVisibility: { [key: string]: boolean } = {
+    'site-info': false,
+  };
+
+  @observable
+  public addressbarTextVisible = true;
+
+  @observable
+  public addressbarEditing = false;
 
   @observable
   public updateInfo = {
@@ -69,10 +81,7 @@ export class Store {
     canGoForward: false,
   };
 
-  public api: number;
-
-  public loadedAPI: boolean;
-
+  public searchInputRef = React.createRef<HTMLInputElement>();
   public findInputRef = React.createRef<HTMLInputElement>();
 
   public canToggleMenu = false;
@@ -90,7 +99,73 @@ export class Store {
     y: 0,
   };
 
+  public windowId = remote.getCurrentWindow().id;
+
   public loaded: boolean = false;
+
+  @computed
+  public get addressbarValue() {
+    const tab = this.tabs.selectedTab;
+    if (tab?.addressbarValue != null) return decodeURI(tab?.addressbarValue);
+    else if (tab && !tab?.url?.startsWith(NEWTAB_URL))
+      return decodeURI(tab.url[tab.url.length - 1] === '/'
+        ? tab.url.slice(0, -1)
+        : tab.url);
+    return '';
+  }
+
+  @computed
+  public get addressbarParts() {
+    let capturedText = '';
+    let grayOutCaptured = false;
+    let hostnameCaptured = false;
+    let protocolCaptured = false;
+    const segments: IParts[] = [];
+
+    const url = decodeURI(this.addressbarValue);
+
+    const whitelistedProtocols = ['https', 'http', 'ftp', 'dot'];
+
+    for (let i = 0; i < url.length; i++) {
+      const protocol = whitelistedProtocols.find(
+        x => `${x}:/` === capturedText,
+      );
+      if (url[i] === '/' && protocol && !protocolCaptured) {
+        segments.push({
+          value: `${protocol}://`,
+          grayOut: true,
+        });
+
+        protocolCaptured = true;
+        capturedText = '';
+      } else if (
+        url[i] === '/' &&
+        !hostnameCaptured &&
+        (protocolCaptured ||
+          !whitelistedProtocols.find(x => `${x}:` === capturedText))
+      ) {
+        segments.push({
+          value: capturedText,
+          grayOut: false,
+        });
+
+        hostnameCaptured = true;
+        capturedText = url[i];
+        grayOutCaptured = true;
+      } else {
+        capturedText += url[i];
+      }
+
+      if (i === url.length - 1) {
+        segments.push({
+          value: capturedText,
+          grayOut: grayOutCaptured,
+        });
+      }
+    }
+
+    return segments;
+  }
 
   public constructor() {
     ipcRenderer.on(
@@ -132,6 +207,10 @@ export class Store {
       if (this.tabs.selectedTab) {
         this.tabs.selectedTab.findVisible = true;
       }
+    });
+
+    ipcRenderer.on('dialog-visibility-change', (e, name, state) => {
+      this.dialogsVisibility[name] = state;
     });
 
     /* @todo Fix update checks */
