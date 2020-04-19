@@ -20,6 +20,8 @@ interface Props {
   invert?: boolean;
   title?: any;
   id?: string;
+  visible?: boolean;
+  isRefresh?: boolean;
 }
 
 @observer
@@ -68,6 +70,8 @@ export default class ToolbarButton extends React.Component<Props, {}> {
       title,
       onContextMenu,
       id,
+      visible,
+      isRefresh
     } = this.props;
 
     let { style } = this.props;
@@ -83,6 +87,7 @@ export default class ToolbarButton extends React.Component<Props, {}> {
         style={style}
         invert={invert}
         title={title}
+        visible={visible}
         ref={(r: HTMLDivElement) => {
           this.ref = r;
           if (typeof divRef === 'function') {
@@ -96,6 +101,7 @@ export default class ToolbarButton extends React.Component<Props, {}> {
           size={size}
           disabled={disabled}
           opacity={opacity}
+          isRefresh={isRefresh}
         />
         <Circle id={id} />
         {children}
