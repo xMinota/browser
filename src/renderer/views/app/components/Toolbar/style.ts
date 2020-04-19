@@ -19,7 +19,7 @@ export const StyledToolbar = styled.div`
 
   ${({ isHTMLFullscreen, theme }: { isHTMLFullscreen: boolean; isDisabled: boolean, theme: ITheme }) => css`
     margin-top: ${isHTMLFullscreen ? -TOOLBAR_HEIGHT : 0}px;
-    background-color: ${theme['active-toolbar-color']};
+    background-color: ${theme['secondary']};
   `};
 `;
 
