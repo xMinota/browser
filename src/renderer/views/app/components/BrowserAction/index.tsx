@@ -19,10 +19,10 @@ const Component = observer(({ data, size, style, opacity, title, onClick, visibl
   const { icon, badgeText, badgeBackgroundColor, badgeTextColor } = data;
 
   return (
-    <StyledBrowserAction style={style} visible={visible}>
-      <ToolbarButton opacity={opacity} size={size} icon={icon} id={id} />
+    <StyledBrowserAction style={style}>
+      <ToolbarButton opacity={opacity} size={size} icon={icon} id={id} visible={!visible} />
       {badgeText.trim() !== '' && (
-        <Badge background={badgeBackgroundColor} color={badgeTextColor}>
+        <Badge background={badgeBackgroundColor} color={badgeTextColor} visible={!visible}>
           {badgeText}
         </Badge>
       )}

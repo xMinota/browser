@@ -3,16 +3,13 @@ import styled, { css } from 'styled-components';
 export const StyledBrowserAction = styled.div`
   position: relative;
   margin-left: 8px;
-  transition: 0.2s opacity;
-
-  ${({ visible }: { visible: boolean }) => css`
-    display: ${visible ? 'auto' : 'none'};
-  `};
+  transition: 0.2s opacity, 0.2s max-width;
 `;
 
 interface BadgeProps {
   background?: string;
   color?: string;
+  visible?: boolean;
 }
 
 export const Badge = styled.div`
@@ -24,8 +21,11 @@ export const Badge = styled.div`
   right: 3px;
   z-index: 5;
   font-size: 8px;
-  ${({ background, color }: BadgeProps) => css`
+  transition: 0.2s opacity;
+
+  ${({ background, color, visible }: BadgeProps) => css`
     background-color: ${background};
     color: ${color};
+    opacity: ${!visible ? 1 : 0};
   `};
 `;
