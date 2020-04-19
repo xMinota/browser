@@ -11,14 +11,15 @@ import {
   StyledTitle,
   StyledClose,
   StyledBorder,
-  StyledOverlay,
   TabContainer,
+  StyledOverlay,
 } from './style';
 import { shadeBlendConvert } from '../../utils';
 import { remote, ipcRenderer } from 'electron';
 import Ripple from '../../../../components/Ripple';
 import { colors } from '../../../../constants';
 import { NEWTAB_URL } from '../../constants';
+import { getTabMenu } from '~/main/menus/tab';
 
 const removeTab = (tab: Tab) => () => {
   tab.close();
@@ -67,101 +68,14 @@ const onClick = (tab: Tab) => (e: React.MouseEvent<HTMLDivElement>) => {
 const contextMenu = (tab: Tab) => () => {
   const { tabs } = store.tabGroups.currentGroup;
 
-  const menu = remote.Menu.buildFromTemplate([
-    {
-      label: 'New tab',
-      accelerator: 'CmdOrCtrl+T',
-      click: () => {
-        const url = NEWTAB_URL;
-        store.tabs.addTab({ url, active: true });
-      },
-    },
-    {
-      label: 'Navigate here',
-      click: () => {
-
-      },
-    },
-    {
-      type: 'separator',
-    },
-    {
-      label: 'Reload',
-      accelerator: 'F5',
-      click: () => {
-        tab.callViewMethod('webContents.reload');
-      },
-    },
-    {
-      label: 'Duplicate',
-      click: () => {
-        store.tabs.addTab({ active: true, url: tab.url });
-      },
-    },
-    {
-      type: 'separator',
-    },
-    {
-      label: 'Close tab',
-      accelerator: 'CmdOrCtrl+W',
-      click: () => {
-        tab.close();
-      },
-    },
-    {
-      label: 'Close other tabs',
-      click: () => {
-        for (const t of tabs) {
-          if (t !== tab) {
-            t.close();
-          }
-        }
-      },
-    },
-    {
-      type: 'separator',
-    },
-    {
-      label: 'Close tabs from left',
-      enabled: store.tabs.list.length != 1,
-      click: () => {
-        for (let i = tabs.indexOf(tab) - 1; i >= 0; i--) {
-          tabs[i].close();
-        }
-      },
-    },
-    {
-      label: 'Close tabs from right',
-      enabled: store.tabs.list.length != 1,
-      click: () => {
-        for (let i = tabs.length - 1; i > tabs.indexOf(tab); i--) {
-          tabs[i].close();
-        }
-      },
-    },
-    {
-      label: 'Reopen last closed tab',
-      accelerator: 'CmdOrCtrl+Shift+T',
-      enabled: store.tabs.lastUrl != '',
-      click: () => {
-        var url = store.tabs.lastUrl[store.tabs.lastUrl.length - 1];
-        if (url != '') {
-          store.tabs.addTab({ url, active: true });
-          store.tabs.lastUrl.splice(-1, 1);
-        }
-      },
-    },
-    {
-      type: 'separator',
-    },
-  ]);
+  const menu = getTabMenu(tab, tabs)
 
   menu.popup();
 };
 
 const Content = observer(({ tab }: { tab: Tab }) => {
   return (
-    <StyledContent collapsed={tab.isExpanded}>
+    <StyledContent collapsed={tab.isExpanded} background={tab.isSelected ? store.theme['primary'] : store.theme['tab-inactive-color']}>
       {!tab.loading && tab.favicon !== '' && (
         <StyledIcon
           isIconSet={tab.favicon == undefined}
@@ -171,21 +85,24 @@ const Content = observer(({ tab }: { tab: Tab }) => {
 
       {tab.loading && (
         <Preloader
-          color={tab.background}
+          color={
+            store.preferences.conf.appearance.theme == "light" 
+              ? tab.background 
+              : shadeBlendConvert(
+                  0.8,
+                  tab.background,
+                )
+          }
           thickness={6}
           size={16}
-          style={{ minWidth: 16, marginLeft: '12px' }}
+          style={{ minWidth: 16 }}
         />
       )}
       <StyledTitle
-        isIcon={tab.isIconSet}
+        isIcon={tab.loading ? true : tab.favicon !== ''}
         tab={tab}
         style={{ 
-          color: tab.isSelected ?
-            shadeBlendConvert(
-              store.theme['tab-text-vibrant-opacity'],
-              tab.background,
-            ) : store.theme["tab-text-color"]
+          color: store.theme["tab-text-color"]
         }}
       >
         <span>{tab.title}</span>
@@ -199,7 +116,6 @@ const Close = observer(({ tab }: { tab: Tab }) => {
     <StyledClose
       onMouseDown={onCloseMouseDown}
       onClick={removeTab(tab)}
-      visible={tab.isExpanded}
       title={store.locale.lang.window[0].navigate_close}
     />
   );
@@ -216,7 +132,7 @@ const Overlay = observer(({ tab }: { tab: Tab }) => {
     <StyledOverlay
       hovered={tab.isHovered}
       style={{
-        backgroundColor: store.theme["tab-overlay-color"],
+        backgroundColor: !!tab.isSelected ? store.theme["tab-overlay-color"] : '',
       }}
     />
   );
@@ -238,24 +154,22 @@ export default observer(({ tab }: { tab: Tab }) => {
     >
       <TabContainer
         selected={tab.isSelected}
+        hovered={tab.isHovered}
         style={{
           backgroundColor: tab.isSelected 
-          ? shadeBlendConvert(
-            store.theme['tab-vibrant-opacity'],
-            tab.background,
-          ) : store.theme['tab-inactive-color']
+          ? store.theme['primary'] : store.theme['tab-inactive-color']
         }}
       >
         <Content tab={tab} />
         <Close tab={tab} />
 
-        <Overlay tab={tab} />
+        {/* <Overlay tab={tab} />
         <Ripple
           rippleTime={0.4}
           opacity={0.15}
           color={tab.background}
           style={{ zIndex: 9 }}
-        />
+        /> */}
       </TabContainer>
       <Border tab={tab} />
     </StyledTab>

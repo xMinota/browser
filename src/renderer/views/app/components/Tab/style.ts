@@ -1,38 +1,10 @@
 import styled, { css } from 'styled-components';
 
-import { transparency, colors } from '~/renderer/constants';
-import { icons, TABS_PADDING } from '~/renderer/views/app/constants';
+import { transparency } from '~/renderer/constants';
+import { icons } from '~/renderer/views/app/constants';
 import { centerIcon, body2 } from '~/shared/mixins';
 import { Tab } from '../../models/tab';
 import { ITheme } from '~/interfaces/theme';
-import { shadeBlendConvert } from '../../utils';
-
-interface CloseProps {
-  visible: boolean;
-}
-
-export const Image = styled.img``;
-
-export const SearchInput = styled.input`
-  color: #000;
-  font-size: 13px;
-  font-family: Roboto;
-  width: 124px;
-  background: none;
-  border: none;
-  font-family: Roboto;
-  transition: 0.5s opacity, width;
-
-  &::placeholder {
-    color: rgb(33, 150, 243);
-    font-family: Roboto;
-  }
-
-  ${({ visible }: { visible: boolean }) => css`
-    opacity: ${visible ? 1 : 0};
-    width: ${visible ? 'auto' : '0px'};
-  `};
-`;
 
 export const StyledClose = styled.div`
   position: absolute;
@@ -48,16 +20,11 @@ export const StyledClose = styled.div`
     filter: ${theme["general-element"]};
   `};
 
-  opacity: ${({ visible }: CloseProps) =>
-    visible ? transparency.icons.inactive : 0};
-
   &:hover {
     &:after {
       opacity: 1;
     }
   }
-
-  
 
   &:after {
     content: '';
@@ -76,6 +43,7 @@ export const StyledClose = styled.div`
 interface TabProps {
   selected: boolean;
   visible?: boolean;
+  hovered?: boolean;
 }
 
 export const StyledTab = styled.div`
@@ -86,11 +54,18 @@ export const StyledTab = styled.div`
   align-items: center;
   will-change: width;
   -webkit-app-region: no-drag;
+  padding-top: 4px;
+
   ${({ selected, visible }: TabProps) => css`
     z-index: ${selected ? 2 : 1};
     display: ${visible ? 'flex' : 'none'};
   `};
 `;
+
+interface ContentProps {
+  collapsed: boolean;
+  background: any;
+}
 
 export const StyledOverlay = styled.div`
   position: absolute;
@@ -100,8 +75,32 @@ export const StyledOverlay = styled.div`
   bottom: 0;
   transition: 0.3s opacity;
   background-color: #f9f9f9;
+  z-index: 2;
+
   ${({ hovered }: { hovered: boolean }) => css`
     opacity: ${hovered ? 1 : 0};
+  `};
+`;
+
+export const StyledContent = styled.div`
+  position: absolute;
+  overflow: hidden;
+  z-index: 2;
+  align-items: center;
+  display: flex;
+  margin-left: 12px;
+
+  ${({ collapsed, background }: ContentProps) => css`
+    max-width: calc(100% - ${collapsed ? 48 : 24}px);
+
+    &:after {
+      content: '';
+      width: 205px;
+      height: 32px;
+      position: absolute;
+      transition: 0.3s background-image;
+      background-image: linear-gradient(to right, transparent 70%,${background} 100%);
+    }
   `};
 `;
 
@@ -113,11 +112,15 @@ interface TitleProps {
 
 export const StyledTitle = styled.div`
   ${body2()};
+  font-family: 'Inter';
   font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   transition: 0.2s margin-left;
   margin-left: 8px;
 
-  ${({ isIcon, tab, theme }: TitleProps) => css`
+  ${({ tab, theme, isIcon }: TitleProps) => css`
     margin-left: ${!isIcon ? 0 : 12}px;
 
     &:* {
@@ -133,29 +136,13 @@ export const StyledTitle = styled.div`
 
 export const StyledIcon = styled.div`
   height: 16px;
-  min-width: 0px;
-  transition: 0.2s opacity, 0.2s min-width, 0.2s margin-left;
+  min-width: 16px;
+  transition: 0.2s opacity, 0.2s min-width;
   ${centerIcon()};
 
   ${({ isIconSet }: { isIconSet: boolean }) => css`
-    min-width: ${isIconSet ? 0 : 16}px;
-    margin-left: ${isIconSet ? 0 : 12}px;
+    min-width: ${isIconSet ? 0 : 16};
     opacity: ${isIconSet ? 0 : 1};
-  `};
-`;
-
-interface ContentProps {
-  collapsed: boolean;
-}
-
-export const StyledContent = styled.div`
-  position: absolute;
-  overflow: hidden;
-  z-index: 2;
-  align-items: center;
-  display: flex;
-  ${({ collapsed }: ContentProps) => css`
-    max-width: calc(100% - ${24 + (collapsed ? 24 : 0)}px);
   `};
 `;
 
@@ -175,15 +162,17 @@ export const StyledBorder = styled.div`
 
 export const TabContainer = styled.div`
   position: relative;
-  border-radius: 6px;
+  border-radius: 6px 6px 0 0;
   width: 100%;
-  height: calc(100% - 4px);
+  height: 100%;
   overflow: hidden;
   display: flex;
   align-items: center;
   backface-visibility: hidden;
-  transition: 0.5s background-color;
-  ${({ selected }: TabProps) => css`
-    background-color: ${selected ? 'rgba(33, 150, 243, 0.15)' : 'rgba(230, 230, 230, 0.25)'};
+  transition: 0.2s background-color;
+  ${({ selected, hovered }: TabProps) => css`
+    background-color: ${hovered ? 'rgba(33, 150, 243, 0.15)' : 'rgba(230, 230, 230, 0.25)'};
+    
+
   `};
 `;
