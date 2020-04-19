@@ -9,6 +9,7 @@ import { WindowsButtons } from '../WindowsButtons';
 
 import store from '../../store';
 import { platform } from 'os';
+import { Searchbar } from '../Searchbar';
 
 const GlobalStyle = createGlobalStyle`${Style}`;
 
@@ -18,6 +19,7 @@ const App = observer(() => {
       <StyledApp >
         <GlobalStyle />
         <Toolbar />
+        <Searchbar />
         <Line />
         {platform() !== 'darwin' && <WindowsButtons />}
       </StyledApp>
