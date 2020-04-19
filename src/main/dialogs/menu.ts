@@ -1,5 +1,6 @@
 import { AppWindow } from '../app-window';
 import { Dialog } from './dialog';
+import { ipcMain } from 'electron';
 
 const WIDTH = 330;
 const HEIGHT = 550;
@@ -17,22 +18,14 @@ export class MenuDialog extends Dialog {
       },
       devtools: false
     });
+
+    ipcMain.on(`show-${this.webContents.id}`, () => {
+      this.show();
+    });
   }
 
   public rearrange() {
     const { width } = this.appWindow.getContentBounds();
     super.rearrange({ x: width - WIDTH });
-  }
-
-  public show() {
-    super.show();
-    this.webContents.send('visible', true);
-    this.visible = true;
-  }
-
-  public hide() {
-    super.hide();
-    this.webContents.send('visible', false);
-    this.visible = false;
   }
 }

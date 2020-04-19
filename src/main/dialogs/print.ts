@@ -1,5 +1,6 @@
 import { AppWindow } from '../app-window';
 import { Dialog } from './dialog';
+import { ipcMain } from 'electron';
 
 const WIDTH = 1000;
 const HEIGHT = 700;
@@ -15,7 +16,11 @@ export class PrintDialog extends Dialog {
         height: HEIGHT,
         y: 36,
       },
-      devtools: true
+      devtools: false
+    });
+
+    ipcMain.on(`show-${this.webContents.id}`, () => {
+      this.show();
     });
   }
 
@@ -23,19 +28,5 @@ export class PrintDialog extends Dialog {
     const { width } = this.appWindow.getContentBounds();
     var x = Math.round(((width - WIDTH) / 2));
     super.rearrange({ x });
-  }
-
-  public show() {
-    super.show();
-    this.webContents.send('visible', true);
-    this.visible = true;
-  }
-
-  public hide() {
-    this.webContents.send('visible', false);
-    setTimeout(() => {
-        super.hide();
-        this.visible = false;
-    }, 100);
   }
 }

@@ -1,10 +1,8 @@
 import { BrowserView, app, ipcMain } from 'electron';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { AppWindow } from '../app-window';
-import { platform } from 'os';
-
-import colors from 'colors';
-import { windowsManager } from '..';
+import { getEditMenu } from '../menus/edit';
+import { getAppPath } from '~/shared/mixins/directory';
 
 interface IOptions {
   name: string;
@@ -12,6 +10,7 @@ interface IOptions {
   bounds?: IRectangle;
   hideTimeout?: number;
   customHide?: boolean;
+  webPreferences?: Electron.WebPreferences;
 }
 
 interface IRectangle {
@@ -35,63 +34,62 @@ export class Dialog extends BrowserView {
 
   private timeout: any;
   private hideTimeout: number;
+  private name: string;
+
+  public tabId = -1;
+
+  private loaded = false;
+  private showCallback: any = null;
 
   public constructor(
     appWindow: AppWindow,
-    { bounds, name, devtools, hideTimeout }: IOptions,
+    { bounds, name, devtools, hideTimeout, webPreferences }: IOptions,
   ) {
     super({
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
-        preload: `${process.cwd()}/build/preloads/dialog-preload.js`
+        enableRemoteModule: true,
+        preload: resolve(`${getAppPath()}/build/preloads/dialog-preload.js`),
+        ...webPreferences,
       },
     });
-
-    console.log(`${colors.blue.bold('Dialog')} Loaded ${name} dialog in ${Date.now() - windowsManager.performanceStart}ms`);
 
     this.appWindow = appWindow;
     this.bounds = { ...this.bounds, ...bounds };
     this.hideTimeout = hideTimeout;
-
-    setTimeout(() => {
-      appWindow.addBrowserView(this);
-    });
-
-    this._hide();
+    this.name = name;
 
     ipcMain.on(`hide-${this.webContents.id}`, () => {
-      this.hide();
+      this.hide(false, false);
+      this.tabId = -1;
     });
 
-    try {
-        this.webContents.debugger.attach('1.1')
-    } catch (err) {
-        console.log('Failed to attach debugger', err)
-    }
-    
-    this.webContents.debugger.on('detach', (event, reason) => {
-        console.log('Debugger detached.', reason)
+    this.webContents.once('dom-ready', () => {
+      this.loaded = true;
+
+      if (this.showCallback) {
+        this.showCallback();
+        this.showCallback = null;
+      }
+    });
+
+    this.webContents.on('context-menu', (e, params: Electron.ContextMenuParams) => {
+      if(params.isEditable) {
+        const menu = getEditMenu(params)
+
+        menu.popup()
+      }
     })
-    
-    this.webContents.debugger.on('message', (event, method, params) => {
-        if(method == 'Runtime.exceptionThrown') {
-            const error = params.exceptionDetails.exception.description;
 
-            console.log(`${colors.blue.bold('Dialog')} ${error}`);
-        }
-    })
-
-    this.webContents.debugger.sendCommand('Runtime.enable')
-
-    if (process.env.ENV === 'dev') {
+    if (process.env.NODE_ENV === 'development') {
       this.webContents.loadURL(`http://localhost:4444/${name}.html`);
       if (devtools) {
         this.webContents.openDevTools({ mode: 'detach' });
       }
     } else {
       this.webContents.loadURL(
-        join('file://', app.getAppPath(), `\\build\\${name}.html`),
+        join('file://', getAppPath(), `build/${name}.html`),
       );
     }
   }
@@ -111,50 +109,75 @@ export class Dialog extends BrowserView {
 
   public toggle() {
     if (!this.visible) this.show();
-    else this.hide();
   }
 
-  public show(focus = true) {
-    this.visible = true;
+  public show(focus = true, waitForLoad = true) {
+    return new Promise(resolve => {
+      clearTimeout(this.timeout);
 
-    clearTimeout(this.timeout);
+      this.appWindow.webContents.send(
+        'dialog-visibility-change',
+        this.name,
+        true,
+      );
 
-    if (platform() === 'darwin') {
-      setTimeout(() => {
-        this.bringToTop();
+      const callback = () => {
+        if (this.visible) {
+          if (focus) this.webContents.focus();
+          return;
+        }
+
+        this.visible = true;
+
+        this.appWindow.addBrowserView(this);
+        this.rearrange();
+
         if (focus) this.webContents.focus();
-      });
-    } else {
-      this.bringToTop();
-      if (focus) this.webContents.focus();
-    }
 
-    this.rearrange();
-  }
+        resolve();
+      };
 
-  private _hide() {
-    this.setBounds({
-      height: this.bounds.height,
-      width: 1,
-      x: 0,
-      y: -this.bounds.height + 1,
+      if (!this.loaded && waitForLoad) {
+        this.showCallback = callback;
+        return;
+      }
+
+      callback();
     });
   }
 
-  public hide(bringToTop = true) {
+  public hideVisually() {
+    this.webContents.send('visible', false);
+  }
+
+  public hide(bringToTop = false, hideVisually = true) {
+    if (hideVisually) this.hideVisually();
+
+    if (!this.visible) return;
+
+    this.appWindow.webContents.send(
+      'dialog-visibility-change',
+      this.name,
+      false,
+    );
+
     if (bringToTop) {
-      // this.bringToTop();
+      this.bringToTop();
     }
 
     clearTimeout(this.timeout);
 
     if (this.hideTimeout) {
-      this.timeout = setTimeout(() => this._hide(), this.hideTimeout);
+      this.timeout = setTimeout(() => {
+        this.appWindow.removeBrowserView(this);
+      }, this.hideTimeout);
     } else {
-      this._hide();
+      this.appWindow.removeBrowserView(this);
     }
 
     this.visible = false;
+
+    // this.appWindow.fixDragging();
   }
 
   public bringToTop() {

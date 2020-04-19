@@ -1,5 +1,6 @@
 import { AppWindow } from '../app-window';
 import { Dialog } from './dialog';
+import { ipcMain } from 'electron';
 
 const WIDTH = 330;
 const HEIGHT = 50;
@@ -18,23 +19,15 @@ export class LocationDialog extends Dialog {
       devtools: false,
     });
 
+    ipcMain.on(`show-${this.webContents.id}`, () => {
+      this.show();
+    });
+
     this.webContents.openDevTools()
   }
 
   public rearrange() {
     const { height, width } = this.appWindow.getContentBounds();
     super.rearrange({ x: 0, y: height - HEIGHT, width });
-  }
-
-  public show() {
-    super.show();
-    this.webContents.send('visible', true);
-    this.visible = true;
-  }
-
-  public hide() {
-    super.hide();
-    this.webContents.send('visible', false);
-    this.visible = false;
   }
 }

@@ -16,23 +16,15 @@ export class QuickMenuDialog extends Dialog {
         height: HEIGHT,
         y: 0,
       },
-      devtools: true
+      devtools: false
+    });
+
+    ipcMain.on(`show-${this.webContents.id}`, () => {
+      this.show();
     });
   }
 
   public setPos(x: number, y: number) {
     super.rearrange({ x, y });
-  }
-
-  public show(tabId: number) {
-    super.show();
-    this.webContents.send('visible', true, tabId, this.appWindow.viewManager.selected.url);
-    this.visible = true;
-  }
-
-  public hide() {
-    super.hide();
-    this.webContents.send('visible', false);
-    this.visible = false;
   }
 }

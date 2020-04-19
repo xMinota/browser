@@ -1,5 +1,6 @@
 import { AppWindow } from '../app-window';
 import { Dialog } from './dialog';
+import { ipcMain } from 'electron';
 
 const WIDTH = 500;
 const HEIGHT = 200;
@@ -17,7 +18,11 @@ export class AlertDialog extends Dialog {
         height: HEIGHT,
         y: 36,
       },
-      devtools: true
+      devtools: false
+    });
+
+    ipcMain.on(`show-${this.webContents.id}`, () => {
+      this.show();
     });
   }
 
@@ -25,22 +30,6 @@ export class AlertDialog extends Dialog {
     const { width } = this.appWindow.getContentBounds();
     var x = Math.round(((width - WIDTH) / 2));
     super.setBounds({ x, y: 36, width: WIDTH, height: HEIGHT })
-  }
-
-  public show() {
-    this.rearrange();
-    super.show();
-    this.webContents.send('visible', true);
-    this.visible = true;
-  }
-
-  public hide() {
-    this.rearrange();
-    this.webContents.send('visible', false);
-    setTimeout(() => {
-        super.hide();
-        this.visible = false;
-    }, 100);
   }
 
   public send(content?: any) {

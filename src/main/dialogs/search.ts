@@ -17,7 +17,11 @@ export class SearchDialog extends Dialog {
         height: HEIGHT,
         y: 80,
       },
-      devtools: true
+      devtools: false
+    });
+
+    ipcMain.on(`show-${this.webContents.id}`, () => {
+      this.show();
     });
 
     ipcMain.on(`height-${this.webContents.id}`, (e, height) => {
@@ -35,19 +39,6 @@ export class SearchDialog extends Dialog {
     const { width } = this.appWindow.getContentBounds();
     var x = Math.round(((width - WIDTH) / 2));
     super.setBounds({ x, y: 80, width: WIDTH, height: HEIGHT })
-  }
-
-  public show(content?: any) {
-    this.rearrange();
-    super.show();
-    this.visible = true;
-    this.webContents.send('content', content);
-    this.webContents.send('visible', true);
-  }
-
-  public hide() {
-    this.webContents.send('visible', false);
-    super.hide();
   }
 
 }
