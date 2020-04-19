@@ -1,8 +1,16 @@
 import { ITheme } from '~/interfaces/theme';
 
 export const lightTheme: ITheme = {
-    "inactive-toolbar-color": "#bababa",
-    "active-toolbar-color": "#ffffff",
+    "secondary": "#ececec",
+    "primary": "#ffffff",
+    "tertiary": "#d1d1d1",
+
+    "search-background-color": "#f6f6f6",
+    "search-border-color": "#dbdbdb",
+    "search-text-color": "#3a3a3a",
+    "search-icon-opacity": "0.7",
+    "search-dim": "#afafaf",
+    "search-bright": "#000",
 
     "overlay-default": "#ffffff",
     "overlay-text-color": "rgba(0,0,0,0.8)",
@@ -27,6 +35,8 @@ export const lightTheme: ITheme = {
     "omnibox-suggestion-selected": "rgba(0, 0, 0, 0.06)",
     "omnibox-icon": "invert(100%)",
     "omnibox-search-icons": "invert(0%)",
+    "omnibox-bubble": "rgba(0, 0, 0, 0.05)",
+    "omnibox-bubble-hover": "rgba(0, 0, 0, 0.1)",
 
     "context-menu-color": "#ececec",
     "context-menu-selected": "rgba(219, 219, 219, 0.8)",
@@ -55,7 +65,9 @@ export const lightTheme: ITheme = {
     "navigation-bar-item-hover": "#ffffff3d",
 
     "windows-controls-color": "invert(0%)",
+    "windows-controls-hover": "rgba(196,196,196,0.4)",
 
+    "button-color": "#eaeaea",
     "button-border": "black",
     "button-text-color": "black",
     "button-hover": "rgba(0, 0, 0, 0.12) !important",
@@ -93,12 +105,28 @@ export const lightTheme: ITheme = {
     "webui-newtab-search-shadow": "0 0 0 1px #d2d2d2, 0 0 0 4px rgb(255, 255, 255)",
     "webui-newtab-hyperlink-color": "#0066FF",
     "webui-newtab-inactive-hyperlink-color": "#4B4B4B",
-    "webui-newtab-alert-action-hover": "rgba(0, 0, 0, 0.05)"
+    "webui-newtab-alert-action-hover": "rgba(0, 0, 0, 0.05)",
+
+    "webui-settings-search-background": "#F5F5F5",
+    "webui-settings-search-text": "#C0C0C0",
+    "webui-settings-item-border-color": "#E1E1E1",
+    "webui-settings-item-hover-color": "#f4f4f4",
+
+    "webui-error-background-color": "#ffffff",
+    "webui-error-text-color": "#0000008a"
 }
 
 export const darkTheme: ITheme = {
-    "inactive-toolbar-color": "#404040", 
-    "active-toolbar-color": "#171717", 
+    "secondary": "#2d2d2d", 
+    "primary": "#171717", 
+    "tertiary": "#bababa",
+
+    "search-background-color": "#252525",
+    "search-border-color": "#3d3d3d",
+    "search-text-color": "#dedede",
+    "search-icon-opacity": "0.7",
+    "search-dim": "#b5b5b5",
+    "search-bright": "#fff",
 
     "overlay-default": "#000000e8", 
     "overlay-text-color": "rgba(255, 255, 255, 0.8)", 
@@ -123,6 +151,8 @@ export const darkTheme: ITheme = {
     "omnibox-suggestion-selected": "#ffffff0f",
     "omnibox-icon": "invert(0%)", 
     "omnibox-search-icons": "invert(100%)", 
+    "omnibox-bubble": "rgba(255, 255, 255, 0.3)",
+    "omnibox-bubble-hover": "rgba(255, 255, 255, 0.6)",
 
     "context-menu-color": "#303030", 
     "context-menu-selected": "rgba(255,255,255,0.15)", 
@@ -151,7 +181,9 @@ export const darkTheme: ITheme = {
     "navigation-bar-item-hover": "#0000003d", 
 
     "windows-controls-color": "invert(100%)", 
+    "windows-controls-hover": "rgba(28, 28, 28, 0.4)",
 
+    "button-color": "#252525",
     "button-border": "white", 
     "button-text-color": "white", 
     "button-hover": "rgba(255, 255, 255, 0.12)", 
@@ -189,14 +221,40 @@ export const darkTheme: ITheme = {
     "webui-newtab-search-shadow": "0 0 0 1px #444444, 0 0 0 4px rgba(255,255,255,0)",
     "webui-newtab-hyperlink-color": "#fff",
     "webui-newtab-inactive-hyperlink-color": "#A4A4A4",
-    "webui-newtab-alert-action-hover": "rgba(255, 255, 255, 0.05)"
+    "webui-newtab-alert-action-hover": "rgba(255, 255, 255, 0.05)",
+
+    "webui-settings-search-background": "#0a0a0a",
+    "webui-settings-search-text": "#575757",
+    "webui-settings-item-border-color": "#1d1d1d",
+    "webui-settings-item-hover-color": "#1c1c1c",
+
+    "webui-error-background-color": "#171717",
+    "webui-error-text-color": "#acacac"
 }
 
 export const oledTheme: ITheme = { ...darkTheme, 
     "omnibox-background-color": "#000000",
     "omnibox-subheading-background-color": "#000000",
 
-    "active-toolbar-color": "#020202", 
+    "secondary": "#090909",
+    "primary": "#020202", 
+
+    "search-background-color": "black",
+    "search-border-color": "#262626",
+
+    "tab-inactive-color": "#0c0c0c",
+
+    "button-color": "#080808",
     
-    "webui-newtab-background-color": "#020202"
+    "line-color": "#121212",
+
+    "webui-newtab-background-color": "#020202",
+
+    "webui-settings-search-background": "#000",
+    "webui-settings-search-text": "#fff",
+    "webui-settings-item-border-color": "transparent",
+    "webui-settings-item-hover-color": "#050505",
+
+    "webui-error-background-color": "#000",
+    "webui-error-text-color": "#fff"
 }
