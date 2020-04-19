@@ -4,6 +4,7 @@ import { render } from 'react-dom';;
 import { fonts } from '../app/constants/fonts';
 import { App } from './app';
 import { createMount } from '~/shared/utils/webui';
+import store from './store';
 
 const styleElement = document.createElement('style');
 
@@ -26,6 +27,13 @@ styleElement.textContent = `
   font-weight: 300;
   src: url(${fonts.robotoLight}) format('woff2');
 }
+
+${store.conf.appearance.animations == false ? `
+* {
+  transition: none !important;
+  animation: none !important;
+}
+` : ''}
 `;
 
 document.head.appendChild(styleElement);
