@@ -21,6 +21,7 @@ export const Preloader = ({ style, color, size, thickness }: Props) => {
             r="20"
             fill="none"
             strokeMiterlimit="10"
+            strokeLinecap="round"
             color={color}
             thickness={thickness}
           />
@@ -33,5 +34,5 @@ export const Preloader = ({ style, color, size, thickness }: Props) => {
 Preloader.defaultProps = {
   thickness: 4,
   size: 48,
-  color: colors.blue['500'],
+  color: '#4285f4',
 };
