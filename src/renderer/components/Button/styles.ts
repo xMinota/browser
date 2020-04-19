@@ -13,14 +13,14 @@ interface StyledButtonProps {
 }
 
 export const StyledButton = styled.div`
-  min-width: 88px;
+  min-width: 90px;
   height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: background-color 0.3s;
-  border-radius: 30px;
+  border-radius: 4px;
   padding-top: 3px;
   padding-bottom: 3px;
   padding-left: 10px;
@@ -30,22 +30,20 @@ export const StyledButton = styled.div`
   ${({ background, foreground, type, visible, icon, theme }: StyledButtonProps) => css`
     display: ${visible ? 'auto' : 'none'};
     color: ${foreground || '#fff'};
-    background-color: ${type === 'outlined'
-      ? 'transparent'
-      : background || '#2196F3'};
-    background-image: url(${icon})
-
-    border: 1px ${theme['button-border']} solid;
+    background-color: ${theme['button-color']};
+    background-image: url(${icon});
+ 
     color: ${theme['button-text-color']} !important;
 
     &:hover {
-      background-color: ${theme['button-hover']} !important;
+      background-color: ${theme['button-hover']};
     }
   `};
 `;
 
 export const StyledLabel = styled.div`
   z-index: 1;
-  font-weight: 300 !important;
-  ${button()};
+  font-weight: 400 !important;
+  font-family: Roboto;
+  font-size: 13px;
 `;
