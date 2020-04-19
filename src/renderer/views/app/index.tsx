@@ -38,6 +38,10 @@ styleElement.textContent = `
   font-weight: 300;
   src: url(${fonts.robotoLight}) format('woff2');
 }
+
+::selection {
+  background-color: #cfe8fc;
+}
 `;
 
 document.head.appendChild(styleElement);

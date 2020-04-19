@@ -43,7 +43,7 @@ export class FaviconsStore {
           const res = await requestURL(url);
 
           if (res.statusCode === 404) {
-            return console.log("No favicon found")
+            return resolve("")
           }
     
           let data = Buffer.from(res.data, 'binary');
@@ -54,7 +54,9 @@ export class FaviconsStore {
             data = Buffer.from(new Uint8Array(await convertIcoToPng(data)));
           }
     
-          const str = `data:${(await fromBuffer(data)).ext};base64,${data.toString(
+          const extension = await fromBuffer(data)
+
+          const str = `data:${extension ? extension.ext : 'png'};base64,${data.toString(
             'base64',
           )}`;
 

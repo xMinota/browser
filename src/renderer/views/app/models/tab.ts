@@ -29,10 +29,10 @@ export class Tab {
   public isDragging: boolean = false;
 
   @observable
-  public title: string = 'New tab';
+  public title: string = 'New Tab';
 
   @observable
-  public originalTitle: string = 'New tab';
+  public originalTitle: string = 'New Tab';
 
   @observable
   public loading: boolean = false;
@@ -78,6 +78,9 @@ export class Tab {
 
   @observable
   public zoomAmount: number = 1;
+
+  @observable
+  public refreshAnimationStarted: boolean = false;
 
   @computed
   public get findVisible() {
@@ -165,6 +168,12 @@ export class Tab {
   public isWindow: boolean = false;
   public audioPlaying: boolean = false;
 
+  @observable
+  public addressbarValue: string = null;
+
+  public addressbarFocused = false;
+  public addressbarSelectionRange = [0, 0];
+
   constructor({ url, active } = defaultTabOptions, tabGroupId: number) {
     this.tabGroupId = tabGroupId;
 
@@ -179,7 +188,7 @@ export class Tab {
         this.select();
 
         if(url == NEWTAB_URL) {
-          ipcRenderer.send("open-search");
+          store.searchInputRef.current.click()
         }
       }
     });
@@ -189,28 +198,16 @@ export class Tab {
       async (e: any, { title, url, zoomAmount }: any) => {
         let updated = null;
 
-        const protocol = new URL(url).protocol;
+        this.lastHistoryId = await store.history.addItem({
+          title: this.title,
+          url,
+          favicon: this.favicon,
+          date: new Date().toString(),
+        });
 
-        if (url !== this.url) {
-          if(protocol !== 'dot:') {
-            this.lastHistoryId = await store.history.addItem({
-              title: this.title,
-              url,
-              favicon: this.favicon,
-              date: new Date().toString(),
-            });
-
-            updated = {
-              url,
-            };
-          }
-        }
-
-        if (title !== this.title) {
-          updated = {
-            title,
-          };
-        }
+        updated = {
+          url,
+        };
 
         if (updated) {
           this.emitOnUpdated(updated);
@@ -235,7 +232,6 @@ export class Tab {
       ) => {
         if (isMainFrame) {
           this.blockedAds = 0;
-          this.zoomAmount = 1;
         }
       },
     );
@@ -252,22 +248,27 @@ export class Tab {
       async (e: any, favicon: string, theme: string) => {
         try {
           const fav = await store.favicons.addFavicon(favicon);
-          const buf = Buffer.from(fav.split('base64,')[1], 'base64');
+          if(fav == "") {
+            this.favicon = '';
+            this.background = colors.blue['500'];
+          } else {
+            const buf = Buffer.from(fav.split('base64,')[1], 'base64');
 
-          this.favicon = favicon;
-
-          if (!this.hasThemeColor) {
-            const palette = await Vibrant.from(buf).getPalette();
-
-            if (!palette.Vibrant) return;
-
-            if (getColorBrightness(palette.Vibrant.hex) < 170) {
-              this.background =
-                theme == 'light'
-                  ? palette.Vibrant.hex
-                  : palette.DarkVibrant.hex;
-            } else {
-              this.background = colors.blue['500'];
+            this.favicon = favicon;
+  
+            if (!this.hasThemeColor) {
+              const palette = await Vibrant.from(buf).getPalette();
+  
+              if (!palette.Vibrant) return;
+  
+              if (getColorBrightness(palette.Vibrant.hex) < 170) {
+                this.background =
+                  theme == 'light'
+                    ? palette.Vibrant.hex
+                    : palette.DarkVibrant.hex;
+              } else {
+                this.background = colors.blue['500'];
+              }
             }
           }
         } catch (e) {
@@ -281,6 +282,8 @@ export class Tab {
 
     ipcRenderer.on(`blocked-ad-${this.id}`, () => {
       this.blockedAds++;
+
+      ipcRenderer.send(`session-blocked-ad`);
     });
 
     ipcRenderer.on(
@@ -295,6 +298,38 @@ export class Tab {
         }
       },
     );
+
+    ipcRenderer.on(
+      `browserview-title-updated-${this.id}`,
+      (e: any, title: string) => {
+        this.title = title;
+      }
+    )
+
+    ipcRenderer.on(
+      `browserview-url-updated-${this.id}`,
+      (e: any, url: string) => {
+        this.url = url;
+
+        if (this.id === store.tabs.selectedId && !store.addressbarEditing) {
+          this.addressbarValue = null;
+        }
+      }
+    )
+
+    ipcRenderer.on(
+      `view-did-navigate-${this.id}`,
+      (e: any, url: string, title: string, isMainFrame: boolean) => {
+        this.url = url;
+        this.title = title;
+        
+        if(isMainFrame) this.favicon = '';
+
+        if (this.id === store.tabs.selectedId && !store.addressbarEditing) {
+          this.addressbarValue = null;
+        }
+      }
+    )
 
     ipcRenderer.on(`view-loading-${this.id}`, (e: any, loading: boolean, url: string) => {
       this.loading = loading;
