@@ -3,10 +3,6 @@ import { ipcRenderer, remote } from 'electron';
 
 import { DEFAULT_PREFERENCES_OBJECT, DEFAULT_PREFERENCES } from '~/shared/models/default-preferences';
 import { Store } from '.';
-import watch from 'node-watch';
-import { resolve } from 'path';
-import { readFileSync } from 'fs';
-import colors from 'colors';
 
 export type SettingsSection =
   | 'appearance'
@@ -23,20 +19,6 @@ export class PreferencesStore {
 
     ipcRenderer.on('update-settings', (e, settings: DEFAULT_PREFERENCES) => {
       this.updatePreferences(settings);
-    });
-
-    let userData = remote.app.getPath('userData')
-
-    const self = this;
-
-    watch(resolve(userData, 'preferences.json'), () => {
-        console.log(`${colors.blue.bold('Preferences')} Preferences file updated`);
-
-        const file = readFileSync(resolve(userData, 'preferences.json'), 'utf-8');
-        const newPrefs = JSON.parse(file)
-
-        self.conf = newPrefs;
-        self.updatePreferences(newPrefs)
     });
   }
 
