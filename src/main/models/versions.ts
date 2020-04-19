@@ -2,6 +2,7 @@ import { EventEmitter } from 'events';
 import { WindowsManager } from '../windows-manager';
 import { requestURL } from '~/renderer/views/app/utils/network';
 import { EDGE_SERVER_HOST } from '../../constants';
+import { app, ipcMain } from 'electron';
 
 export class Versions extends EventEmitter {
     private loaded = false;
@@ -26,6 +27,12 @@ export class Versions extends EventEmitter {
         super();
 
         this.load()
+
+        ipcMain.on('get-version-sync', async e => {
+          await this.onLoad();
+          this.load()
+          e.returnValue = app.getVersion();
+        });
     }
 
     private async load() {

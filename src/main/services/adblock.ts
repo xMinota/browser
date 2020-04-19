@@ -53,20 +53,7 @@ export const runAdblockService = (ses: Electron.Session) => {
 };
 
 export const stopAdblockService = (ses: any) => {
-  if (!ses.webRequest.listeners) return;
-  try {
-    if (engine) {
-      engine.disableBlockingInSession(ses);
-    }
-  } catch (e) {
-    if (ses.id1) {
-      ses.webRequest.removeListener('onBeforeRequest', ses.id1.id);
-      delete ses.id1;
-    }
-
-    if (ses.id2) {
-      ses.webRequest.removeListener('onHeadersReceived', ses.id2.id);
-      delete ses.id2;
-    }
+  if (engine) {
+    engine.disableBlockingInSession(ses);
   }
 };
