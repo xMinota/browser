@@ -8,6 +8,7 @@ export type TestFunction = (str: string) => boolean;
 interface Props {
   color?: string;
   fontColor?: string;
+  indicatorColor?: string;
   label?: string;
   placeholder?: string;
   icon?: any;
@@ -17,6 +18,9 @@ interface Props {
   test?: TestFunction;
   rows?: number;
   cols?: number;
+  backgroundColor?: string;
+  value?: any;
+  inputRef?: any;
 }
 
 interface State {
@@ -26,8 +30,6 @@ interface State {
 }
 
 export class Inputfield extends React.PureComponent<Props, State> {
-  public inputRef = React.createRef<HTMLInputElement>();
-
   static defaultProps: Props = {
     color: colors.blue['500'],
     inputType: 'text',
@@ -108,14 +110,16 @@ export class Inputfield extends React.PureComponent<Props, State> {
   render() {
     const {
       color,
+      indicatorColor,
       label,
       placeholder,
       icon,
       inputType,
       style,
       fontColor,
-      rows,
-      cols,
+      backgroundColor,
+      value,
+      inputRef
     } = this.props;
     const { activated, focused, error } = this.state;
 
@@ -125,9 +129,9 @@ export class Inputfield extends React.PureComponent<Props, State> {
     const primaryColor = error ? colors.red['500'] : color;
 
     return (
-      <StyledTextfield onClick={this.onClick} style={style}>
+      <StyledTextfield onClick={this.onClick} style={style} background={backgroundColor}>
         <Input
-          ref={this.inputRef}
+          ref={inputRef}
           type={inputType}
           color={primaryColor}
           fontColor={fontColor}
@@ -136,6 +140,7 @@ export class Inputfield extends React.PureComponent<Props, State> {
           hasLabel={hasLabel}
           hasIcon={hasIcon}
           placeholder={label == null || focused ? placeholder : null}
+          defaultValue={value}
           onInput={this.onInput}
           spellCheck={false}
         />
@@ -145,7 +150,7 @@ export class Inputfield extends React.PureComponent<Props, State> {
           </Label>
         )}
         {hasIcon && <Icon src={icon} onClick={this.onIconClick} />}
-        <Indicator focused={focused} color={primaryColor} />
+        <Indicator focused={focused} color={indicatorColor} />
       </StyledTextfield>
     );
   }

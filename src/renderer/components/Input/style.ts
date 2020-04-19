@@ -4,12 +4,14 @@ import { robotoRegular, robotoMedium, centerIcon } from '~/shared/mixins';
 export const StyledTextfield = styled.div`
   width: 280px;
   position: relative;
-  border-top-right-radius: 4px;
-  border-top-left-radius: 4px;
+  border-radius: 4px;
   overflow: hidden;
-  background-color: #f5f5f5;
   cursor: text;
   user-select: none;
+
+  ${({ background }: { background: any }) => css`
+    background-color: ${background};
+  `};
 `;
 
 interface InputProps {
@@ -21,7 +23,7 @@ interface InputProps {
 
 export const Input = styled.input`
   width: 100%;
-  height: 48px;
+  height: 42px;
   font-size: 16px;
   color: #000;
   padding-left: 12px;
@@ -33,8 +35,6 @@ export const Input = styled.input`
   ${({ color, hasLabel, hasIcon, fontColor }: InputProps) => css`
     padding-top: ${hasLabel ? 12 : 0}px;
     padding-right: ${hasIcon ? 48 : 12}px;
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0px 0px 0px ${fontColor};
 
     color: ${color};
 
