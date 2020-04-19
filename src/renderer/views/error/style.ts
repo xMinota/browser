@@ -1,56 +1,57 @@
-import styled, { keyframes } from 'styled-components';
+import styled, { css } from 'styled-components';
+import { ITheme } from '~/interfaces/theme';
 
-const errorAnimation = keyframes`
-    20%, 30% {
-        width: 20px;
-        box-shadow: inset 0px -30px white;
+export const Style = css`
+    ul {
+        margin-top: 0;
     }
 
-    40%, 50%, 60%, 70%, 80% {
-        box-shadow: inset 0px -30px #ffffff00;
-    }
-
-    90%, 100% {
-        box-shadow: inset 0px -30px #ffffff00;
-        width: 80px;
-    }
+    ${({ theme }: { theme: ITheme }) => css`
+        body {
+            margin: 0;
+            color: ${theme['webui-error-text-color']};
+            background-color: ${theme['webui-error-background-color']};
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-size: 75%;
+        }
+    `}
 `;
 
-export const ErrorIcon = styled.div`
-    height: 80px;
-    background-color: #1f1f1f;
-    border-radius: 42px;
+export const Main = styled.div`
     margin: 0 auto;
-    animation: ${errorAnimation} 3s infinite 0s alternate;
-    animation-timing-function: cubic-bezier(0.74, 0.01, 0, 1.04);
-
-    width: 20px;
-    box-shadow: inset 0px -30px white;
-
-    &:after {
-        content: ' ';
-        height: 20px;
-        width: 20px;
-        background-color: #212121;
-        position: absolute;
-        left: 247px;
-        top: 92px;
-        border-radius: 12px;
-    }
+    width: calc(100% - 32px);
+    max-width: 512px;
+    margin: 14vh auto 0;
 `;
 
-export const Title = styled.h1`
-    text-align: center;
-    opacity: 0.8;
-    font-size: 2rem;
+export const Title = styled.div`
+    font-size: 24px;
     font-weight: 500;
-    font-family: 'Google Sans';
+    margin-bottom: 16px;
 `;
 
-export const Subtitle = styled.h1`
-    text-align: center;
-    opacity: 0.8;
-    font-size: 18px;
-    font-weight: 300;
-    margin-top: -16px;
+export const Code = styled.div`
+    font-size: 12px;
+`;
+
+export const Description = styled.div`
+    margin-bottom: 16px;
+    line-height: 1.5rem;
+    font-size: 14px;
+`;
+
+export const Icon = styled.div`
+    background-repeat: no-repeat;
+    width: 72px;
+    height: 72px;
+    margin-bottom: 40px;
+
+    ${({ theme }: { theme: ITheme }) => css`
+        filter: ${theme['general-element']} ${theme['webui-error-text-color'] == '#fff' ? 'brightness(2)' : ''}
+    `}
+`;
+
+export const Strong = styled.div`
+    font-weight: bold;
+    display: contents;
 `;
