@@ -1,43 +1,13 @@
-import { observable } from "mobx";
-import { ipcRenderer } from 'electron';
+import { DialogStore } from '~/models/dialog-store';
 
-class Store {
+export class Store extends DialogStore {
+  public constructor() {
+    super();
+  }
 
-    public constructor() {
-        ipcRenderer.on('visible', (e, flag) => {
-            this.visible = flag;
-        });
-
-        ipcRenderer.on('content', (e, action, content) => {
-            this.content.shift()
-
-            if(!content || content.length == 0) {
-                content = " ";
-            }
-
-            this.content.push({
-                content,
-                action
-            });
-        })
-    }
-
-    @observable
-    public visible: boolean = false;
-
-    @observable
-    public content: any = [];
-
-    @observable
-    public sender: string;
-
-    public hide() {
-        this.visible = false;
-        setTimeout(() => {
-            ipcRenderer.send('hide-dialog', 'alert');
-            this.content.shift();
-        }, 100);
-    }
+  public onVisibilityChange(visible: boolean) {
+    this.visible = visible;
+  }
 }
 
-export default new Store()
+export default new Store();
