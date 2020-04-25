@@ -19,5 +19,5 @@ export const matchesPattern = (pattern: string, url: string) => {
 };
 
 export const getHostname = (input: string): string => {
-  return new URL(input).hostname;
+  return new URL(input).hostname.replace(/www./g, "");
 };
