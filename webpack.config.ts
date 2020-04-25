@@ -15,6 +15,7 @@ import * as Sentry from '@sentry/node';
 import createStyledComponentsTransformer from 'typescript-plugin-styled-components';
 
 import { Configuration } from 'webpack';
+import { spawn, execSync } from 'child_process';
 
 export const devMode = process.env.NODE_ENV === 'dev' ? 'development' : 'production';
 
@@ -25,6 +26,8 @@ export const scTransformer = createStyledComponentsTransformer({
   displayName: devMode == 'development',
 });
 
+let electronProcess;
+
 export const aliases = {
   '~/renderer': path.resolve(__dirname, 'src', 'renderer'),
   '~/main': path.resolve(__dirname, 'src', 'main'),
@@ -32,6 +35,7 @@ export const aliases = {
   '~/shared': path.resolve(__dirname, 'src', 'shared'),
   '~/extensions': path.resolve(__dirname, 'src', 'extensions'),
   '~/interfaces': path.resolve(__dirname, 'src', 'interfaces'),
+  '~/models': path.resolve(__dirname, 'src', 'models'),
 }
 
 export const baseConfig: Configuration = {
@@ -70,6 +74,19 @@ export const baseConfig: Configuration = {
       ],
       { copyUnmodified: true },
     ),
+    new CopyPlugin(
+      [
+        {
+          from:
+            'node_modules/@dothq/electron-privacy/preloads',
+          to: 'privacy-preloads',
+          transform: (fileContent, path) => {
+            return terser.minify(fileContent.toString()).code.toString();
+          },
+        },
+      ],
+      { copyUnmodified: true },
+    ),
   ],
   module: {
     rules: [
@@ -81,10 +98,6 @@ export const baseConfig: Configuration = {
           transpileOnly: true,
           experimentalWatchApi: true,
         },
-      },
-      {
-        test: /\.(sa|sc|c)ss$/,
-        use: [ExtractCssChunksPlugin.loader, 'css-loader', 'sass-loader'],
       },
       {
         test: /\.(png|jpg|gif|svg)$/,
@@ -146,5 +159,31 @@ const mainProdConfig = merge.smart(mainConfig, productionConfig);
 export default (devMode == 'development'
   ? [mainDevConfig]
   : [mainProdConfig]);
+
+if (process.env.START === '1') {
+  mainConfig.plugins.push({
+    apply: compiler => {
+      compiler.hooks.afterEmit.tap('AfterEmitPlugin', () => {
+        if (electronProcess) {
+          try {
+            if (process.platform === 'win32') {
+              execSync(`taskkill /pid ${electronProcess.pid} /f /t`);
+            } else {
+              electronProcess.kill();
+            }
+
+            electronProcess = null;
+          } catch (e) {}
+        }
+
+        electronProcess = spawn('npm', ['start'], {
+          shell: true,
+          env: process.env,
+          stdio: 'inherit',
+        });
+      });
+    },
+  });
+}
 
 Sentry.init({ dsn: 'https://6820d13549a4444991a1c7e9a8047e31@sentry.io/3379175' });

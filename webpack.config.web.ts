@@ -15,6 +15,7 @@ const webConfig = {
     entry: {
       newtab: path.resolve(__dirname, 'src', 'renderer', 'views', 'newtab', 'index.tsx'),
       settings: path.resolve(__dirname, 'src', 'renderer', 'views', 'settings', 'index.tsx'),
+      history: path.resolve(__dirname, 'src', 'renderer', 'views', 'history', 'index.tsx'),
       error: path.resolve(__dirname, 'src', 'renderer', 'views', 'error', 'index.tsx'),
     },
     plugins: [
@@ -29,6 +30,12 @@ const webConfig = {
         inject: true,
         chunks: ['settings'],
         filename: `settings.html`
+      }),
+      new HtmlWebpackPlugin({  
+        template: path.resolve(__dirname, 'static', 'pages', 'app.html'),
+        inject: true,
+        chunks: ['history'],
+        filename: `history.html`
       }),
       new HtmlWebpackPlugin({  
         template: path.resolve(__dirname, 'static', 'pages', 'app.html'),
