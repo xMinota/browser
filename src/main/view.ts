@@ -6,6 +6,8 @@ import {
   clipboard,
   nativeImage,
   dialog,
+  ipcMain,
+  app,
 } from 'electron';
 import { windowsManager } from '.';
 import { resolve } from 'path';
@@ -14,6 +16,9 @@ import { truncateStr } from '~/shared/mixins';
 import { writeFileSync } from 'fs';
 import colors from 'colors';
 import { zoom } from '~/shared/events';
+import { getAppPath } from '~/shared/mixins/directory';
+
+console.log(resolve(`${getAppPath()}/build/preloads/view-preload.js`))
 
 export class View extends BrowserView {
   public title: string = '';
@@ -27,11 +32,12 @@ export class View extends BrowserView {
     super({
       webPreferences: {
         sandbox: true,
-        preload: `${process.cwd()}/build/preloads/view-preload.js`,
+        preload: resolve(`${getAppPath()}/build/preloads/view-preload.js`),
         nodeIntegration: false,
         additionalArguments: [`--tab-id=${id}`],
         contextIsolation: true,
         partition: 'persist:view',
+        enableBlinkFeatures: 'ShadowDOMV0,CustomElementsV0,HTMLImports',
         scrollBounce: true,
         plugins: true,
         javascript: true,
@@ -41,8 +47,16 @@ export class View extends BrowserView {
 
     this.homeUrl = url;
     this.tabId = id;
+    
+    this.setBackgroundColor('#000');
 
-    this.setBackgroundColor("#fff");
+    this.webContents.session.webRequest.onBeforeSendHeaders(
+      (details, callback) => {
+        const preferences = windowsManager.settings.conf;
+        if (preferences.privacy.doNotTrack) details.requestHeaders['DNT'] = '1';
+        callback({ requestHeaders: details.requestHeaders });
+      },
+    );
 
     this.webContents.userAgent =
       this.webContents.userAgent
@@ -353,75 +367,29 @@ export class View extends BrowserView {
             url: validatedURL
           }
 
-          if(!windowsManager.window.viewManager.viewErrors[this.id]) {
-            windowsManager.window.viewManager.viewErrors[this.id] = true;
-
-            return this.webContents.reload()
-          } else {
-            delete windowsManager.window.viewManager.viewErrors[this.id];
-
-            const url = this.webContents.getURL();
-  
-            return this.webContents.loadURL(`dot://error#${url}`)
-          }
+          console.log(this.error)
 
         }
       }
     )
 
-    this.webContents.addListener('did-start-navigation', async (...args) => {
+    this.webContents.addListener('did-start-navigation', async (e, ...args) => {
       this.updateNavigationState();
 
-      if(args[3] == true) {
-        windowsManager.window.webContents.send(`browserview-tab-info-updated-${this.tabId}`);
-      }
-
-      let url = this.webContents.getURL();
+      this.favicon = '';
 
       windowsManager.window.webContents.send(`load-commit-${this.tabId}`, ...args);
-
-      this.emitWebNavigationEvent('onBeforeNavigate', {
-        tabId: this.tabId,
-        url: this.webContents.getURL(),
-        frameId: 0,
-        timeStamp: Date.now(),
-        processId: process.pid,
-        parentFrameId: -1,
-      });
-
-      this.emitWebNavigationEvent('onCommitted', {
-        tabId: this.tabId,
-        url,
-        sourceFrameId: 0,
-        timeStamp: Date.now(),
-        processId: process.pid,
-        frameId: 0,
-        parentFrameId: -1,
-      });
     });
 
     this.webContents.addListener('did-navigate', async (e, url) => {
       windowsManager.window.webContents.send(
         `view-did-navigate-${this.webContents.id}`,
         url,
+        this.webContents.getTitle(),
+        true
       );
 
-      this.emitWebNavigationEvent('onCreatedNavigationTarget', {
-        tabId: this.tabId,
-        url,
-        sourceFrameId: 0,
-        timeStamp: Date.now(),
-      });
-    });
-
-    this.webContents.addListener('dom-ready', () => {
-      this.emitWebNavigationEvent('onDOMContentLoaded', {
-        tabId: this.tabId,
-        url: this.webContents.getURL(),
-        frameId: 0,
-        timeStamp: Date.now(),
-        processId: process.pid,
-      });
+      this.updateURL(url);
     });
 
     this.webContents.addListener(
@@ -431,71 +399,24 @@ export class View extends BrowserView {
           windowsManager.window.webContents.send(
             `view-did-navigate-${this.webContents.id}`,
             url,
+            this.webContents.getTitle(),
+            true
           );
+
+          this.updateURL(url);
         }
       },
     );
 
-    this.webContents.addListener('did-finish-load', async () => {
-      this.emitWebNavigationEvent('onCompleted', {
-          tabId: this.tabId,
-          url: this.webContents.getURL(),
-          frameId: 0,
-          timeStamp: Date.now(),
-          processId: process.pid,
-      });
-    })
 
     this.webContents.addListener(
       'new-window',
-      (e, url, frameName, disposition, options, referrer) => {
+      (e, url, frameName, disposition) => {
         if (disposition === 'new-window') {
-          if (disposition === 'new-window') {
-            if (
-              windowsManager.window.viewManager.selected.title != `Dot - ${options.title}`
-            ) {
-              e.preventDefault();
-              if (
-                url.split('://')[0] != 'http' ||
-                url.split('://')[0] != 'https'
-              ) {
-                return shell.openExternal(url);
-              }
-              let child = new BrowserWindow({
-                show: false,
-                frame: false,
-                title: `Dot - ${options.title}`,
-                width: options.width,
-                height: options.height,
-                icon: resolve(process.cwd() + '/static/icon.png'),
-              });
-              child.loadURL(process.cwd() + '/static/pages/util/window.html');
-              child.once('ready-to-show', () => {
-                child.show();
-                child.webContents.send('load-url', url);
-              });
-            }
-          }
-          if (frameName === 'link') {
+          if (frameName === '_self') {
             e.preventDefault();
             windowsManager.window.viewManager.selected.webContents.loadURL(url);
-          }
-          if (frameName === '_self' || options.title == '_self') {
-            e.preventDefault();
-            windowsManager.window.viewManager.selected.webContents.loadURL(url);
-          }
-          if (frameName === '_top' || options.title == '_top') {
-            e.preventDefault();
-            windowsManager.window.viewManager.selected.webContents.loadURL(url);
-          }
-          if (frameName === '_blank' || options.title == '_blank') {
-            e.preventDefault();
-            windowsManager.window.webContents.send('api-tabs-create', {
-              url,
-              active: true,
-            });
-          }
-          if (frameName === 'modal') {
+          } else if (frameName === '_blank') {
             e.preventDefault();
             windowsManager.window.webContents.send('api-tabs-create', {
               url,
@@ -504,18 +425,16 @@ export class View extends BrowserView {
           }
         } else if (disposition === 'foreground-tab') {
           e.preventDefault();
-          windowsManager.window.webContents.send('api-tabs-create', { url, active: true });
+          windowsManager.window.webContents.send('api-tabs-create', {
+            url,
+            active: true,
+          });
         } else if (disposition === 'background-tab') {
           e.preventDefault();
-          windowsManager.window.webContents.send('api-tabs-create', { url, active: false });
-        } else if (frameName == '_blank') {
-          e.preventDefault();
-          windowsManager.window.webContents.send('api-tabs-create', { url, active: true });
-        }
-
-        if (frameName == '_blank') {
-          e.preventDefault();
-          windowsManager.window.webContents.send('api-tabs-create', { url, active: true });
+          windowsManager.window.webContents.send('api-tabs-create', {
+            url,
+            active: false,
+          });
         }
       },
     );
@@ -523,6 +442,8 @@ export class View extends BrowserView {
     this.webContents.addListener(
       'page-favicon-updated',
       async (e, favicons) => {
+        if(!favicons || !favicons[0]) return;
+
         this.favicon = favicons[0];
 
         windowsManager.window.webContents.send(
@@ -540,6 +461,13 @@ export class View extends BrowserView {
       );
     });
 
+    ipcMain.on(`browserview-title-updated-${this.tabId}`, (e, title) => {
+      windowsManager.window.webContents.send(
+        `browserview-title-updated-${this.tabId}`,
+        title
+      )
+    })
+
     this.setAutoResize({ width: true, height: true, horizontal: false, vertical: false });
     this.webContents.loadURL(url);
   }
@@ -551,12 +479,18 @@ export class View extends BrowserView {
   public updateNavigationState() {
     if (this.isDestroyed()) return;
 
-    if (windowsManager.window.viewManager.selectedId === this.webContents.id) {
-      windowsManager.window.webContents.send('update-navigation-state', {
-        canGoBack: this.webContents.canGoBack(),
-        canGoForward: this.webContents.canGoForward(),
-      });
-    }
+    windowsManager.window.webContents.send('update-navigation-state', {
+      canGoBack: this.webContents.canGoBack(),
+      canGoForward: this.webContents.canGoForward(),
+    });
   }
+
+  public updateURL = (url: string) => {
+    windowsManager.window.webContents.send(`browserview-url-updated-${this.tabId}`, url)
+
+    if (this.url === url) return;
+
+    this.url = url;
+  };
 
 }
